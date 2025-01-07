@@ -5,7 +5,7 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_EXPOSURE, 40) 
 
 state, img = cap.read()
-print(img.depth())
+# print(img.depth())
 
 
 # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
