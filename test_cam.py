@@ -4,5 +4,5 @@ cap = cv2.VideoCapture(0)
 
 state, img = cap.read()
 assert state, 'no image'
-cv2.imwrite('img.jpg', img)
 print(img)
+cv2.imwrite('img.jpg', img)
