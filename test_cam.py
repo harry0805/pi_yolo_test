@@ -1,7 +1,7 @@
 import cv2
 import time
 
-cap = cv2.VideoCapture(0, cv2.CAP_MSMF)
+cap = cv2.VideoCapture(0)
 
 # Print camera properties
 print("Frame width:", cap.get(cv2.CAP_PROP_FRAME_WIDTH))
