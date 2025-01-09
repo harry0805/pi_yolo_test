@@ -1,8 +1,12 @@
 import cv2
 import time
 
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_EXPOSURE, 40) 
+cap = cv2.VideoCapture(0, cv2.CAP_MSMF)
+
+# Print camera properties
+print("Frame width:", cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+print("Frame height:", cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+print("Format:", cap.get(cv2.CAP_PROP_FORMAT))
 
 state, img = cap.read()
 # print(img.depth())
