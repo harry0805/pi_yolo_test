@@ -1,3 +1,5 @@
+import time
+
 import cv2
 
 # from yolov7 import YOLOv7
@@ -12,7 +14,6 @@ yolov7_detector = YOLOv7(model_path, conf_thres=0.5, iou_thres=0.5)
 
 # cv2.namedWindow("Detected Objects", cv2.WINDOW_NORMAL)
 while cap.isOpened():
-
     # Read frame from the video
     ret, frame = cap.read()
 
@@ -28,3 +29,5 @@ while cap.isOpened():
     # Press key q to stop
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+
+    time.sleep(1)
