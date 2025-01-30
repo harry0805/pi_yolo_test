@@ -1,0 +1,7 @@
+path: C:\Users\Beast\PycharmProjects\MOOSE\images
+train: train
+val: val
+test: null
+nc: 1
+names:
+  0: moose
