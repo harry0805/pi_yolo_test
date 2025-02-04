@@ -1,23 +1,25 @@
-import gpiod
 import time
+from gpiod.line import Direction, Value
+import gpiod
 
-CHIP = "/dev/gpiochip4"  # Use gpioinfo command to verify the correct chip
-TX_GPIO = 17  # Your transmitter GPIO pin
+GPIO_CHIP = "/dev/gpiochip4"  # Check with `gpioinfo` if unsure
+TX_GPIO = 17  # Change this to your actual GPIO pin
 
-chip = gpiod.Chip(CHIP)
-line = chip.get_line(TX_GPIO)
-
-config = gpiod.LineRequest()
-config.consumer = "rf_tx"
-config.request_type = gpiod.LINE_REQ_DIR_OUT
-
-line.request(config)
-
-try:
-    while True:
-        line.set_value(1)  # Send HIGH signal
-        time.sleep(0.5)
-        line.set_value(0)  # Send LOW signal
-        time.sleep(2)
-except KeyboardInterrupt:
-    line.release()
+# Request GPIO line
+with gpiod.request_lines(
+    GPIO_CHIP,
+    consumer="rf_tx",
+    config={
+        TX_GPIO: gpiod.LineSettings(
+            direction=Direction.OUTPUT, output_value=Value.INACTIVE
+        )
+    },
+) as request:
+    try:
+        while True:
+            request.set_value(TX_GPIO, Value.ACTIVE)  # Send HIGH signal
+            time.sleep(0.5)
+            request.set_value(TX_GPIO, Value.INACTIVE)  # Send LOW signal
+            time.sleep(2)
+    except KeyboardInterrupt:
+        print("Exiting...")
