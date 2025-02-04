@@ -21,5 +21,6 @@ with gpiod.request_lines(
             time.sleep(0.5)
             request.set_value(TX_GPIO, Value.INACTIVE)  # Send LOW signal
             time.sleep(2)
+            print("Sent RF signal")
     except KeyboardInterrupt:
         print("Exiting...")
