@@ -17,10 +17,10 @@ with gpiod.request_lines(
 ) as request:
     try:
         while True:
+            print("Sending signal")
             request.set_value(TX_GPIO, Value.ACTIVE)  # Send HIGH signal
             time.sleep(0.5)
             request.set_value(TX_GPIO, Value.INACTIVE)  # Send LOW signal
             time.sleep(2)
-            print("Sent RF signal")
     except KeyboardInterrupt:
         print("Exiting...")
