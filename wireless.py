@@ -1,26 +1,20 @@
 import time
-from gpiod.line import Direction, Value
-import gpiod
+from rpi_rf import RFDevice
 
-GPIO_CHIP = "/dev/gpiochip4"  # Check with `gpioinfo` if unsure
-TX_GPIO = 17  # Change this to your actual GPIO pin
+GPIO_PIN = 10  # Adjust based on your wiring
 
-# Request GPIO line
-with gpiod.request_lines(
-    GPIO_CHIP,
-    consumer="rf_tx",
-    config={
-        TX_GPIO: gpiod.LineSettings(
-            direction=Direction.OUTPUT, output_value=Value.INACTIVE
-        )
-    },
-) as request:
-    try:
-        while True:
-            print("Sending signal")
-            request.set_value(TX_GPIO, Value.ACTIVE)  # Send HIGH signal
-            time.sleep(0.5)
-            request.set_value(TX_GPIO, Value.INACTIVE)  # Send LOW signal
-            time.sleep(2)
-    except KeyboardInterrupt:
-        print("Exiting...")
+rfdevice = RFDevice(GPIO_PIN)
+rfdevice.enable_tx()
+
+try:
+    while True:
+        rfdevice.tx_code(123456, protocol=1, pulse_length=320)  # Adjust code and protocol
+        print("Sent ON signal")
+        time.sleep(1)
+        rfdevice.tx_code(123456, protocol=1, pulse_length=320)  # Adjust for OFF if needed
+        print("Sent OFF signal")
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("Transmission stopped")
+finally:
+    rfdevice.cleanup()
