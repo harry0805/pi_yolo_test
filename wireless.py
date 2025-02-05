@@ -28,10 +28,10 @@ with gpiod.request_lines(
         while True:
             print("Sending ACTIVE signal...")
             request.set_value(LINE, Value.ACTIVE)  # Switch On
-            time.sleep(1)
+            time.sleep(5)
             print("Sending INACTIVE signal...")
             request.set_value(LINE, Value.INACTIVE)  # Switch Off
-            time.sleep(1)
+            time.sleep(5)
     except KeyboardInterrupt:
         print("Transmission stopped")
     finally:
