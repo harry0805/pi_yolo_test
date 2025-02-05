@@ -1,17 +1,12 @@
-from yolov7.YOLOv7 import YOLOv7 as YOLOv7Orignal
+from .YOLOv7 import YOLOv7 as YOLOv7Orignal
 
 import cv2
 import time
 import numpy as np
 
 class YOLOv7(YOLOv7Orignal):
-    def __init__(self, path, conf_thres=0.7, iou_thres=0.5, official_nms=False):
-        self.conf_threshold = conf_thres
-        self.iou_threshold = iou_thres
-        self.official_nms = official_nms
-
-        # Initialize model
-        self.initialize_model(path)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def initialize_model(self, path):
         self.net = cv2.dnn.readNetFromONNX(path)

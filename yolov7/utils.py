@@ -10,6 +10,7 @@ class_names = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'tra
                'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard',
                'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
                'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+class_names.append('8367')
 
 # Create a list of colors for each class where each color is a tuple of 3 integer values
 rng = np.random.default_rng(3)
@@ -79,6 +80,9 @@ def draw_detections(image, boxes, scores, class_ids, mask_alpha=0.3):
 
     # Draw bounding boxes and labels of detections
     for box, score, class_id in zip(boxes, scores, class_ids):
+        if type(class_id) != int:
+            class_id = 0
+
         color = colors[class_id]
 
         x1, y1, x2, y2 = box.astype(int)
