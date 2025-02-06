@@ -5,7 +5,7 @@ TX_PIN = 17  # adjust as needed
 BIT_DURATION = 0.0005  # 500 microseconds per bit
 
 # Initialize gpiod chip and request TX line as output
-chip = gpiod.Chip("gpiochip0")
+chip = gpiod.Chip('/dev/gpiochip0')
 line = chip.get_line(TX_PIN)
 line.request(consumer="transmit_message", type=gpiod.LINE_REQ_DIR_OUT)
 
