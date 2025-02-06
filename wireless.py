@@ -10,12 +10,12 @@ LINE_NUM  = 17                 # The GPIO line number (this must match how you w
 # (If "on", we keep the line ACTIVE continuously. A short delay is fine, or 0.)
 UPDATE_INTERVAL = 2
 
-current_mode = {"value": "off"}  # shared mutable mode
+current_mode = {"state": False}  # shared mutable mode
 stop_event = threading.Event()
 
 def signal_toggle_loop(request):
     while not stop_event.is_set():
-        if current_mode["value"] == "on":
+        if current_mode["state"]:
             request.set_value(LINE_NUM, Value.ACTIVE)
             time.sleep(0.1)
             request.set_value(LINE_NUM, Value.INACTIVE)
@@ -28,29 +28,27 @@ def main():
     config = {LINE_NUM: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)}
 
     with gpiod.request_lines(GPIO_CHIP, consumer="rf-transmitter", config=config) as request:
-        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request,), daemon=True)
+        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request), daemon=True)
         toggle_thread.start()
-
-        print("Type 'on' or 'off' to change the signal state. Press Ctrl+C to exit.")
         
         try:
             while True:
                 # Check for user input (non‐blocking check would be nicer, but for simplicity we use blocking)
-                user_cmd = input("Enter command (on/off): ").strip().lower()
-                if user_cmd == "on":
-                    current_mode["value"] = "on"
-                    print(">>> Now sending ACTIVE signal continuously.")
-                elif user_cmd == "off":
-                    current_mode["value"] = "off"
+                input("ENTER TO TOGGLE STATE").strip().lower()
+                current_mode["state"] = not current_mode["state"]
+
+                if current_mode["state"]:
+                    print(">>> Now sending ACTIVE signal continuously <<<")
+                else:
+                    current_mode["state"] = False
                     # Send one last INACTIVE signal before going idle
                     request.set_value(LINE_NUM, Value.INACTIVE)
-                    print(">>> Transmitter is now idle (no signal).")
-                else:
-                    print("Unknown command. Use 'on' or 'off'.")
+                    print(">>> Transmitter is now idle (no signal) <<<")
+
         except KeyboardInterrupt:
             print("Stopped by user")
         finally:
-            current_mode["value"] = "off"
+            current_mode["state"] = False
             request.set_value(LINE_NUM, Value.INACTIVE)
             stop_event.set()
             toggle_thread.join()
