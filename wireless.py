@@ -1,6 +1,7 @@
 import time
 import gpiod
 from gpiod.line import Direction, Value
+import sys, select
 
 GPIO_CHIP = "/dev/gpiochip4"   # Adjust to match your Pi’s gpiochip device
 LINE_NUM  = 17                 # The GPIO line number (this must match how you wired the TX pin)
@@ -27,11 +28,7 @@ def main():
                     print(">>> Now sending ACTIVE signal continuously.")
                 elif user_cmd == "off":
                     current_mode = "off"
-                    print(">>> Sending single active pulse, then going inactive.")
-                    # Send a brief active pulse
-                    request.set_value(LINE_NUM, Value.ACTIVE)
-                    time.sleep(0.2)
-                    # Go inactive
+                    # Send one last INACTIVE signal before going idle
                     request.set_value(LINE_NUM, Value.INACTIVE)
                     print(">>> Transmitter is now idle (no signal).")
                 else:
@@ -39,15 +36,16 @@ def main():
 
                 # If we switched to "on," continuously drive the line ACTIVE in a background loop
                 while current_mode == "on":
+                    if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+                        new_cmd = sys.stdin.readline().strip().lower()
+                        if new_cmd == "off":
+                            current_mode = "off"
+                            break
                     request.set_value(LINE_NUM, Value.ACTIVE)
                     # Sleep a bit before checking if user typed a new command
                     time.sleep(UPDATE_INTERVAL)
                     # To break out if user changes to "off," we do a non‐blocking check:
-                    # BUT for simplicity, we’ll just break on new input:
-                    if gpiod.poll(line=None, timeout=0):
-                        # The above is a placeholder—libgpiod python doesn’t have poll like that by default
-                        # We could do something more advanced, but let’s keep it simple:
-                        break
+                    
 
         except KeyboardInterrupt:
             print("Stopped by user")
