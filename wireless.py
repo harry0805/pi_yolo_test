@@ -8,7 +8,7 @@ LINE_NUM  = 17                 # The GPIO line number (this must match how you w
 
 # Frequency in seconds at which we toggle/refresh the "on" signal.
 # (If "on", we keep the line ACTIVE continuously. A short delay is fine, or 0.)
-UPDATE_INTERVAL = 0.1
+UPDATE_INTERVAL = 2
 
 current_mode = {"value": "off"}  # shared mutable mode
 stop_event = threading.Event()
