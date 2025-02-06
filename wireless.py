@@ -31,8 +31,6 @@ def main():
         toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request,), daemon=True)
         toggle_thread.start()
 
-        current_mode = "off"
-
         print("Type 'on' or 'off' to change the signal state. Press Ctrl+C to exit.")
         
         try:
