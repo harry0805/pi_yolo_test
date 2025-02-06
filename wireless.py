@@ -14,7 +14,6 @@ current_mode = {"state": False}  # shared mutable mode
 stop_event = threading.Event()
 
 def signal_toggle_loop(request):
-    print(current_mode)
     while not stop_event.is_set():
         if current_mode["state"]:
             request.set_value(LINE_NUM, Value.ACTIVE)
@@ -35,9 +34,6 @@ def main():
         try:
             while True:
                 # Check for user input (non‐blocking check would be nicer, but for simplicity we use blocking)
-                input("ENTER TO TOGGLE STATE").strip().lower()
-                current_mode["state"] = not current_mode["state"]
-
                 if current_mode["state"]:
                     print(">>> Now sending ACTIVE signal continuously <<<")
                 else:
@@ -45,6 +41,8 @@ def main():
                     # Send one last INACTIVE signal before going idle
                     request.set_value(LINE_NUM, Value.INACTIVE)
                     print(">>> Transmitter is now idle (no signal) <<<")
+                input("").strip().lower()
+                current_mode["state"] = not current_mode["state"]
 
         except KeyboardInterrupt:
             print("Stopped by user")
