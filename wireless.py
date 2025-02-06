@@ -14,6 +14,7 @@ current_mode = {"state": False}  # shared mutable mode
 stop_event = threading.Event()
 
 def signal_toggle_loop(request):
+    print(current_mode)
     while not stop_event.is_set():
         if current_mode["state"]:
             request.set_value(LINE_NUM, Value.ACTIVE)
