@@ -1,18 +1,16 @@
-import pigpio
+import gpiod
 import time
 
-TX_PIN = 17  # adjust as needed; using BCM numbering
-BIT_DURATION = 0.0005  # 500 microseconds per bit, adjust if needed
+TX_PIN = 17  # adjust as needed
+BIT_DURATION = 0.0005  # 500 microseconds per bit
 
-pi = pigpio.pi()  # Ensure pigpiod is running
-if not pi.connected:
-    exit(1)
+# Initialize gpiod chip and request TX line as output
+chip = gpiod.Chip("gpiochip0")
+line = chip.get_line(TX_PIN)
+line.request(consumer="transmit_message", type=gpiod.LINE_REQ_DIR_OUT)
 
 def send_bit(bit):
-    if bit:
-        pi.write(TX_PIN, 1)
-    else:
-        pi.write(TX_PIN, 0)
+    line.set_value(1 if bit else 0)
     time.sleep(BIT_DURATION)
 
 def send_byte(byte):
@@ -23,9 +21,6 @@ def send_byte(byte):
 def send_message(msg):
     for ch in msg:
         send_byte(ord(ch))
-
-# Setup TX pin
-pi.set_mode(TX_PIN, pigpio.OUTPUT)
 
 while True:
     send_message("Hello World!")
