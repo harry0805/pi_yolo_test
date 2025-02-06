@@ -1,7 +1,7 @@
 import time
 import gpiod
 from gpiod.line import Direction, Value
-import sys, select
+import threading
 
 GPIO_CHIP = "/dev/gpiochip4"   # Adjust to match your Pi’s gpiochip device
 LINE_NUM  = 17                 # The GPIO line number (this must match how you wired the TX pin)
@@ -10,11 +10,27 @@ LINE_NUM  = 17                 # The GPIO line number (this must match how you w
 # (If "on", we keep the line ACTIVE continuously. A short delay is fine, or 0.)
 UPDATE_INTERVAL = 0.1
 
+current_mode = {"value": "off"}  # shared mutable mode
+stop_event = threading.Event()
+
+def signal_toggle_loop(request):
+    while not stop_event.is_set():
+        if current_mode["value"] == "on":
+            request.set_value(LINE_NUM, Value.ACTIVE)
+            time.sleep(0.1)
+            request.set_value(LINE_NUM, Value.INACTIVE)
+            time.sleep(UPDATE_INTERVAL)
+        else:
+            time.sleep(0.1)
+
 def main():
     # Configure the GPIO line for output, initially inactive
     config = {LINE_NUM: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)}
 
     with gpiod.request_lines(GPIO_CHIP, consumer="rf-transmitter", config=config) as request:
+        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request,), daemon=True)
+        toggle_thread.start()
+
         current_mode = "off"
 
         print("Type 'on' or 'off' to change the signal state. Press Ctrl+C to exit.")
@@ -24,34 +40,22 @@ def main():
                 # Check for user input (non‐blocking check would be nicer, but for simplicity we use blocking)
                 user_cmd = input("Enter command (on/off): ").strip().lower()
                 if user_cmd == "on":
-                    current_mode = "on"
+                    current_mode["value"] = "on"
                     print(">>> Now sending ACTIVE signal continuously.")
                 elif user_cmd == "off":
-                    current_mode = "off"
+                    current_mode["value"] = "off"
                     # Send one last INACTIVE signal before going idle
                     request.set_value(LINE_NUM, Value.INACTIVE)
                     print(">>> Transmitter is now idle (no signal).")
                 else:
                     print("Unknown command. Use 'on' or 'off'.")
-
-                # If we switched to "on," continuously drive the line ACTIVE in a background loop
-                while current_mode == "on":
-                    if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-                        new_cmd = sys.stdin.readline().strip().lower()
-                        if new_cmd == "off":
-                            current_mode = "off"
-                            break
-                    request.set_value(LINE_NUM, Value.ACTIVE)
-                    # Sleep a bit before checking if user typed a new command
-                    time.sleep(UPDATE_INTERVAL)
-                    # To break out if user changes to "off," we do a non‐blocking check:
-                    
-
         except KeyboardInterrupt:
             print("Stopped by user")
         finally:
-            # Always go inactive to avoid spurious signals
+            current_mode["value"] = "off"
             request.set_value(LINE_NUM, Value.INACTIVE)
+            stop_event.set()
+            toggle_thread.join()
 
 if __name__ == "__main__":
     main()
