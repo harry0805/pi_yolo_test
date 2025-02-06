@@ -29,7 +29,7 @@ def main():
     config = {LINE_NUM: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)}
 
     with gpiod.request_lines(GPIO_CHIP, consumer="rf-transmitter", config=config) as request:
-        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request), daemon=True)
+        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request,), daemon=True)
         toggle_thread.start()
         
         try:
