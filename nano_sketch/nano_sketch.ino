@@ -1,8 +1,3 @@
-//Tech Trends Shameer
-//RF Transmitter and Receiver
-
-//Below is the Transmitter Program
-
 // Include RadioHead Amplitude Shift Keying Library
 #include <RH_ASK.h>
 // Include dependant SPI Library 
@@ -19,7 +14,7 @@ void setup()
 
 void loop()
 {
-    const char *msg = "Welcome to Tech Trends  ";
+    const char *msg = "Hello World!";
     rf_driver.send((uint8_t *)msg, strlen(msg));
     rf_driver.waitPacketSent();
     delay(1000);
