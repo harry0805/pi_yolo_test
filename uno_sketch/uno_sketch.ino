@@ -29,8 +29,8 @@ void loop()
   {
     unsigned long receivedValue = mySwitch.getReceivedValue();
     // Debug print
-    Serial.print("Received ");
-    Serial.println(receivedValue);
+    // Serial.print("Received ");
+    // Serial.println(receivedValue);
 
     if (receivedValue == 1234)
     {
