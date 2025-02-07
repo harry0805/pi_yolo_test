@@ -1,21 +1,29 @@
-// Include RadioHead Amplitude Shift Keying Library
-#include <RH_ASK.h>
-// Include dependant SPI Library 
-#include <SPI.h> 
+#include <RCSwitch.h>
 
-// Create Amplitude Shift Keying Object
-RH_ASK rf_driver;
+RCSwitch mySwitch = RCSwitch();
 
-void setup()
-{
-    // Initialize ASK Object
-    rf_driver.init();
+void setup() {
+
+  Serial.begin(9600);
+  
+  // Transmitter is connected to Arduino Pin #10  
+  mySwitch.enableTransmit(10);
+  
+  // Optional set protocol (default is 1, will work for most outlets)
+  // mySwitch.setProtocol(2);
+
+  // Optional set pulse length.
+  // mySwitch.setPulseLength(320);
+  
+  // Optional set number of transmission repetitions.
+  // mySwitch.setRepeatTransmit(15);
+  
 }
 
-void loop()
-{
-    const char *msg = "Hello World!";
-    rf_driver.send((uint8_t *)msg, strlen(msg));
-    rf_driver.waitPacketSent();
-    delay(1000);
+void loop() {
+  /* Same switch as above, but using decimal code */
+  mySwitch.send(1234, 24);
+  delay(2000);
+  mySwitch.send(5678, 24);
+  delay(2000);
 }

@@ -1,30 +1,55 @@
-// Include RadioHead Amplitude Shift Keying Library
-#include <RH_ASK.h>
-// Include dependant SPI Library 
-#include <SPI.h> 
+#include <RCSwitch.h>
 
-// Create Amplitude Shift Keying Object
-RH_ASK rf_driver;
+RCSwitch mySwitch = RCSwitch();
+
+const int dataPin = 2;  // Hooked to Receiver Data Out
+const int relayPin = 7; // Controls the light (via a relay module)
+
+const unsigned long RELAY_TIMEOUT = 5000; // Timeout in milliseconds
+
+unsigned long lastActiveTime = 0;
 
 void setup()
 {
-    // Initialize ASK Object
-    rf_driver.init();
-    // Setup Serial Monitor
-    Serial.begin(9600);
+  Serial.begin(9600);
+
+  mySwitch.enableReceive(digitalPinToInterrupt(dataPin));
+
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, HIGH); // Relay off HIGH=off
+
+  Serial.println("System initialized!");
 }
 
 void loop()
 {
-    // Set buffer to size of expected message
-    uint8_t buf[24];
-    uint8_t buflen = sizeof(buf);
-    // Check if received packet is correct size
-    if (rf_driver.recv(buf, &buflen))
+  unsigned long now = millis();
+
+  if (mySwitch.available())
+  {
+    unsigned long receivedValue = mySwitch.getReceivedValue();
+    Serial.print("Received ");
+    Serial.println(receivedValue);
+
+    if (receivedValue == 1234)
     {
-      
-      // Message received with valid checksum
-      Serial.print("Message Received: ");
-      Serial.println((char*)buf);         
+      Serial.println("Light ON");
+      digitalWrite(relayPin, LOW);
+      lastActiveTime = now;
     }
+    else if (receivedValue == 5678)
+    {
+      Serial.println("Light OFF");
+      digitalWrite(relayPin, HIGH);
+    }
+
+    mySwitch.resetAvailable();
+  }
+
+  // Turn off relay if no "ON" signal received for the timeout duration
+  if (digitalRead(relayPin) == LOW && (now - lastActiveTime > RELAY_TIMEOUT))
+  {
+    Serial.println("Timeout reached -> Light OFF");
+    digitalWrite(relayPin, HIGH);
+  }
 }
