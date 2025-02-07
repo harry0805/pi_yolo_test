@@ -50,4 +50,6 @@ try:
 except KeyboardInterrupt:
     print("Stopping...")
 finally:
+    stop_event.set()
+    on_thread.join()
     rfdevice.cleanup()
