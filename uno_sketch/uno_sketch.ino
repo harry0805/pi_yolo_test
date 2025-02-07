@@ -28,16 +28,17 @@ void loop()
   if (mySwitch.available())
   {
     unsigned long receivedValue = mySwitch.getReceivedValue();
-    Serial.print("Received ");
-    Serial.println(receivedValue);
+    // Debug print
+    // Serial.print("Received ");
+    // Serial.println(receivedValue);
 
-    if (receivedValue == 1234)
+    if (receivedValue == 1234 && digitalRead(relayPin) == HIGH)
     {
       Serial.println("Light ON");
       digitalWrite(relayPin, LOW);
       lastActiveTime = now;
     }
-    else if (receivedValue == 5678)
+    else if (receivedValue == 5678 && digitalRead(relayPin) == LOW)
     {
       Serial.println("Light OFF");
       digitalWrite(relayPin, HIGH);
