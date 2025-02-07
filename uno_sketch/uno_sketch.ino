@@ -29,13 +29,15 @@ void loop()
   {
     unsigned long receivedValue = mySwitch.getReceivedValue();
     // Debug print
-    // Serial.print("Received ");
-    // Serial.println(receivedValue);
+    Serial.print("Received ");
+    Serial.println(receivedValue);
 
-    if (receivedValue == 1234 && digitalRead(relayPin) == HIGH)
+    if (receivedValue == 1234)
     {
-      Serial.println("Light ON");
-      digitalWrite(relayPin, LOW);
+      if (digitalRead(relayPin) == HIGH) {
+        Serial.println("Light ON");
+        digitalWrite(relayPin, LOW);
+      }
       lastActiveTime = now;
     }
     else if (receivedValue == 5678 && digitalRead(relayPin) == LOW)
