@@ -1,56 +1,81 @@
-import time
-import gpiod
-from gpiod.line import Direction, Value
+from rpi_rf import RFDevice
 import threading
 
-GPIO_CHIP = "/dev/gpiochip4"   # Adjust to match your Pi’s gpiochip device
-LINE_NUM  = 17                 # The GPIO line number (this must match how you wired the TX pin)
 
-# Frequency in seconds at which we toggle/refresh the "on" signal.
-# (If "on", we keep the line ACTIVE continuously. A short delay is fine, or 0.)
-UPDATE_INTERVAL = 2
+class SignalControl:
+    def __init__(self, rf_device: RFDevice, on_code: int=1234, off_code: int=5678, ping_interval: int|float=1):
+        """
+        Controls signal sending for ON and OFF signals. When ON, continuously sends the ON signal at a specified interval.
 
-current_mode = {"state": False}  # shared mutable mode
-stop_event = threading.Event()
+        Args:
+            rf_device: An instance of the RFDevice with enabled tx
+            on_code: ON signal code
+            off_code: OFF signal code
+            ping_interval: Time interval between ON signals
+        """
+        self.rf_device = rf_device
+        self.on_code = int(on_code)
+        self.off_code = int(off_code)
+        self.ping_interval = ping_interval
 
-def signal_toggle_loop(request):
-    while not stop_event.is_set():
-        if current_mode["state"]:
-            request.set_value(LINE_NUM, Value.ACTIVE)
-            time.sleep(0.1)
-            request.set_value(LINE_NUM, Value.INACTIVE)
-            time.sleep(UPDATE_INTERVAL)
-        else:
-            time.sleep(0.1)
+        self._stopped = False
+        self._state = False
+        self._cond = threading.Condition()
+        self._thread = threading.Thread(target=self._signal_thread, daemon=True)
+        self._thread.start()
 
-def main():
-    # Configure the GPIO line for output, initially inactive
-    config = {LINE_NUM: gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)}
+    def _signal_thread(self):
+        while not self._stopped:
+            # with self._cond:
+            #     current_mode = self._mode
 
-    with gpiod.request_lines(GPIO_CHIP, consumer="rf-transmitter", config=config) as request:
-        toggle_thread = threading.Thread(target=signal_toggle_loop, args=(request,), daemon=True)
-        toggle_thread.start()
-        
-        try:
-            while True:
-                # Check for user input (non‐blocking check would be nicer, but for simplicity we use blocking)
-                if current_mode["state"]:
-                    print(">>> Now sending ACTIVE signal continuously <<<")
-                else:
-                    current_mode["state"] = False
-                    # Send one last INACTIVE signal before going idle
-                    request.set_value(LINE_NUM, Value.INACTIVE)
-                    print(">>> Transmitter is now idle (no signal) <<<")
-                input("").strip().lower()
-                current_mode["state"] = not current_mode["state"]
+            if self._state:
+                # Continuous send the ON signal
+                self.rf_device.tx_code(self.on_code)
+                # When the mode is still ON, wait for the ping interval
+                if self._state:
+                    self._cond.wait(self.ping_interval)
+            else:
+                # Send the OFF signal one time
+                self.rf_device.tx_code(self.off_code)
+                if not self._state:
+                    self._cond.wait()
+                # with self._cond:
+                #     # Wait for mode change or stop signal
+                #     while not self.stopped and not self._mode:
+                #         self._cond.wait()
 
-        except KeyboardInterrupt:
-            print("Stopped by user")
-        finally:
-            current_mode["state"] = False
-            request.set_value(LINE_NUM, Value.INACTIVE)
-            stop_event.set()
-            toggle_thread.join()
+    def set_state(self, state):
+        state = bool(state)
+        with self._cond:
+            # Only act when there is a change
+            if self._state != state:
+                self._state = state
+                # Notify the thread that mode has changed.
+                self._cond.notify_all()
+
+    def stop(self):
+        with self._cond:
+            self._stopped = True
+            self._cond.notify_all()
+        self._thread.join()
+
 
 if __name__ == "__main__":
-    main()
+    # <<<Testing with manual control>>>
+    PIN = 17  # GPIO pin
+
+    rfdevice = RFDevice(PIN)
+    rfdevice.enable_tx()
+    signal = SignalControl(rfdevice)
+
+    while True:
+        # Send OFF signal
+        signal.set_state(False)
+        print(">>> Sending OFF signal <<<")
+        input()
+
+        # Send ON signal
+        signal.set_state(True)
+        print(">>> Sending ON signal <<<")
+        input()
