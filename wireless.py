@@ -34,12 +34,14 @@ class SignalControl:
                 self.rf_device.tx_code(self.on_code)
                 # When the mode is still ON, wait for the ping interval
                 if self._state:
-                    self._cond.wait(self.ping_interval)
+                    with self._cond:
+                        self._cond.wait(self.ping_interval)
             else:
                 # Send the OFF signal one time
                 self.rf_device.tx_code(self.off_code)
                 if not self._state:
-                    self._cond.wait()
+                    with self._cond:
+                        self._cond.wait()
                 # with self._cond:
                 #     # Wait for mode change or stop signal
                 #     while not self.stopped and not self._mode:
